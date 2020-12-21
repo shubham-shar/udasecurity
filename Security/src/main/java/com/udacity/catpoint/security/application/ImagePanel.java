@@ -10,7 +10,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.udacity.catpoint.imageService.service.FakeImageService;
-import com.udacity.catpoint.imageService.service.StyleService;
+import com.udacity.catpoint.security.service.StyleService;
 import com.udacity.catpoint.security.service.SecurityService;
 // TODO: https://www.baeldung.com/java-9-modularity
 /** Panel containing the 'camera' output. Allows users to 'refresh' the camera

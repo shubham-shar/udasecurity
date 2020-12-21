@@ -7,7 +7,7 @@ import java.util.Arrays;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.udacity.catpoint.imageService.service.StyleService;
+import com.udacity.catpoint.security.service.StyleService;
 import com.udacity.catpoint.security.data.ArmingStatus;
 import com.udacity.catpoint.security.service.SecurityService;
 

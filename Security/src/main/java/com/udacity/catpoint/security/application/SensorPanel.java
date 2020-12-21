@@ -4,7 +4,7 @@ import net.miginfocom.swing.MigLayout;
 
 import javax.swing.*;
 
-import com.udacity.catpoint.imageService.service.StyleService;
+import com.udacity.catpoint.security.service.StyleService;
 import com.udacity.catpoint.security.data.Sensor;
 import com.udacity.catpoint.security.data.SensorType;
 import com.udacity.catpoint.security.service.SecurityService;

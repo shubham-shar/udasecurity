@@ -1,4 +1,4 @@
-package com.udacity.catpoint.imageService;
+package com.udacity.catpoint.security;
 
 
 import org.junit.jupiter.api.Test;
