@@ -7,4 +7,5 @@ module imageProcessor {
     requires software.amazon.awssdk.regions;
     requires software.amazon.awssdk.core;
     exports com.udacity.catpoint.imageService.service;
+    opens com.udacity.catpoint.imageService.service;
 }

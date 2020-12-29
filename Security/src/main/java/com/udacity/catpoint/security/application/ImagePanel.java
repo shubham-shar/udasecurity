@@ -9,15 +9,16 @@ import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 
-import com.udacity.catpoint.imageService.service.FakeImageService;
+import com.udacity.catpoint.imageService.service.ImageService;
+import com.udacity.catpoint.security.data.AlarmStatus;
 import com.udacity.catpoint.security.service.StyleService;
 import com.udacity.catpoint.security.service.SecurityService;
 // TODO: https://www.baeldung.com/java-9-modularity
 /** Panel containing the 'camera' output. Allows users to 'refresh' the camera
  * by uploading their own picture, and 'scan' the picture, sending it for image analysis
  */
-public class ImagePanel extends JPanel {
-    private FakeImageService imageService;
+public class ImagePanel extends JPanel implements StatusListener{
+    
     private SecurityService securityService;
 
     private JLabel cameraHeader;
@@ -27,12 +28,12 @@ public class ImagePanel extends JPanel {
     private int IMAGE_WIDTH = 300;
     private int IMAGE_HEIGHT = 225;
 
-    public ImagePanel(FakeImageService imageService, SecurityService securityService) {
+    public ImagePanel(SecurityService securityService) {
         super();
         setLayout(new MigLayout());
-        this.imageService = imageService;
         this.securityService = securityService;
-
+        securityService.addStatusListener(this);
+    
         cameraHeader = new JLabel("Camera Feed");
         cameraHeader.setFont(StyleService.HEADING_FONT);
 
@@ -63,19 +64,30 @@ public class ImagePanel extends JPanel {
 
         //button that sends the image to the image service
         JButton scanPictureButton = new JButton("Scan Picture");
-        scanPictureButton.addActionListener(e -> {
-            if(imageService.imageContainsCat(currentCameraImage, 80.0f)) {
-                cameraHeader.setText("DANGER - CAT DETECTED");
-                securityService.catDetected(true);
-            } else {
-                cameraHeader.setText("Camera Feed - No Cats Detected");
-                securityService.catDetected(false);
-            }
-        });
+        scanPictureButton.addActionListener(e -> securityService.processImage(currentCameraImage));
 
         add(cameraHeader, "span 3, wrap");
         add(cameraLabel, "span 3, wrap");
         add(addPictureButton);
         add(scanPictureButton);
+    }
+    
+    @Override
+    public void notify(AlarmStatus status) {
+        //no behavior necessary
+    }
+    
+    @Override
+    public void catDetected(boolean catDetected) {
+        if(catDetected) {
+            cameraHeader.setText("DANGER - CAT DETECTED");
+        } else {
+            cameraHeader.setText("Camera Feed - No Cats Detected");
+        }
+    }
+    
+    @Override
+    public void sensorStatusChanged() {
+        //no behavior necessary
     }
 }

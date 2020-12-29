@@ -44,4 +44,14 @@ public class DisplayPanel extends JPanel implements StatusListener {
         currentStatusLabel.setBackground(status.getColor());
         currentStatusLabel.setOpaque(true);
     }
+    
+    @Override
+    public void catDetected(boolean catDetected) {
+        // no behavior necessary
+    }
+    
+    @Override
+    public void sensorStatusChanged() {
+        // no behavior necessary
+    }
 }

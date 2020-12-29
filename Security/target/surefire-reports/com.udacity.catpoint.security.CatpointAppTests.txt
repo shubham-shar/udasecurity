@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.udacity.catpoint.security.CatpointAppTests
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.075 s - in com.udacity.catpoint.security.CatpointAppTests

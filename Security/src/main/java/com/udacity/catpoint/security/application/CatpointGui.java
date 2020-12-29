@@ -5,6 +5,7 @@ import net.miginfocom.swing.MigLayout;
 import javax.swing.*;
 
 import com.udacity.catpoint.imageService.service.FakeImageService;
+import com.udacity.catpoint.imageService.service.ImageService;
 import com.udacity.catpoint.security.data.PretendDatabaseSecurityRepositoryImpl;
 import com.udacity.catpoint.security.data.SecurityRepository;
 import com.udacity.catpoint.security.service.SecurityService;
@@ -17,12 +18,12 @@ import com.udacity.catpoint.security.service.SecurityService;
  */
 public class CatpointGui extends JFrame {
     private SecurityRepository securityRepository = new PretendDatabaseSecurityRepositoryImpl();
-    private SecurityService securityService = new SecurityService(securityRepository);
-    private FakeImageService imageService = new FakeImageService();
+    private ImageService imageService = new FakeImageService();
+    private SecurityService securityService = new SecurityService(securityRepository, imageService);
     private DisplayPanel displayPanel = new DisplayPanel(securityService);
     private ControlPanel controlPanel = new ControlPanel(securityService);
     private SensorPanel sensorPanel = new SensorPanel(securityService);
-    private ImagePanel imagePanel = new ImagePanel(imageService, securityService);
+    private ImagePanel imagePanel = new ImagePanel(securityService);
 
     public CatpointGui() {
         setLocation(100, 100);

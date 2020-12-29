@@ -1,20 +1,25 @@
 package com.udacity.catpoint.security;
 
-import static org.mockito.Mockito.when;
+import java.awt.*;
 
+import com.udacity.catpoint.imageService.service.FakeImageService;
 import com.udacity.catpoint.security.data.AlarmStatus;
 import com.udacity.catpoint.security.data.ArmingStatus;
+import com.udacity.catpoint.security.data.PretendDatabaseSecurityRepositoryImpl;
 import com.udacity.catpoint.security.data.SecurityRepository;
 import com.udacity.catpoint.security.data.Sensor;
 import com.udacity.catpoint.security.data.SensorType;
 import com.udacity.catpoint.security.service.SecurityService;
+import com.udacity.catpoint.security.service.StyleService;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
+import org.mockito.MockitoAnnotations;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -28,8 +33,17 @@ public class SecurityServiceTests {
     @InjectMocks
     SecurityService securityService;
     
-    @Mock
     SecurityRepository securityRepository;
+    
+    @Mock
+    FakeImageService imageService;
+    
+    @BeforeEach
+    public void setup(){
+        MockitoAnnotations.initMocks(this);
+        securityRepository = new PretendDatabaseSecurityRepositoryImpl();
+        securityService = new SecurityService(securityRepository, imageService);
+    }
     
     // All Tests should not throw error
     
@@ -38,13 +52,6 @@ public class SecurityServiceTests {
     public void setArmingStatusTest(ArmingStatus status){
         securityService.setArmingStatus(status);
     }
-    
-    @ParameterizedTest
-    @ValueSource(booleans = {true, false})
-    public void catDetectedTest(Boolean cat){
-        securityService.catDetected(cat);
-    }
-    
     
     @ParameterizedTest
     @EnumSource(AlarmStatus.class)
@@ -58,11 +65,16 @@ public class SecurityServiceTests {
             "PENDING_ALARM,WINDOW,true", "PENDING_ALARM,WINDOW,false", "PENDING_ALARM,MOTION,true",
             "PENDING_ALARM,MOTION,false" })
     public void changeSensorActivationStatusTest(AlarmStatus alarmStatus, SensorType sensorType, Boolean active){
-         Sensor sensor = new Sensor("udacitySensor", sensorType);
-         sensor.setActive(true);
-         when(securityRepository.getAlarmStatus()).thenReturn(alarmStatus);
-         securityService.changeSensorActivationStatus(sensor, active);
-         sensor.setActive(false);
-         securityService.changeSensorActivationStatus(sensor, active);
+        Sensor sensor = new Sensor("udacitySensor", sensorType);
+        sensor.setActive(true);
+        securityService.changeSensorActivationStatus(sensor, active);
+        sensor.setActive(false);
+        Font headingFont = StyleService.HEADING_FONT;
+        securityService.changeSensorActivationStatus(sensor, active);
+    }
+    
+    @Test
+    public void testCatpointApp(){
+        CatpointApp.main(null);
     }
 }
