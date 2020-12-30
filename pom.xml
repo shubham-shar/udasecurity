@@ -28,10 +28,23 @@
       <artifactId>miglayout-swing</artifactId>
       <version>5.1</version>
     </dependency>
-
+    <!-- https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs -->
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-maven-plugin</artifactId>
+      <version>4.1.4</version>
+    </dependency>
     <!-- Thanks for using https://jar-download.com -->
   </dependencies>
-
+  <reporting>
+    <plugins>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+        <version>4.1.4</version>
+      </plugin>
+    </plugins>
+  </reporting>
   <build>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
       <plugins>
@@ -60,15 +73,6 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.2.0</version>
-          <configuration>
-            <archive>
-              <manifest>
-                <addClasspath>true</addClasspath>
-                <classpathPrefix>lib/</classpathPrefix>
-                <mainClass>com.udacity.catpoint.security.CatpointApp</mainClass>
-              </manifest>
-            </archive>
-          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
@@ -92,14 +96,16 @@
           <artifactId>maven-assembly-plugin</artifactId>
           <version>3.3.0</version>
           <configuration>
+            <archive>
+              <manifest>
+                <mainClass>
+                  com.udacity.catpoint.security.CatpointApp
+                </mainClass>
+              </manifest>
+            </archive>
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
-            <archive>
-              <manifest>
-                <mainClass>com.udacity.catpoint.security.CatpointApp</mainClass>
-              </manifest>
-            </archive>
           </configuration>
           <executions>
             <execution>
