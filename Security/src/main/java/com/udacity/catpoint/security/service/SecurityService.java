@@ -50,7 +50,7 @@ public class SecurityService {
     private void catDetected(Boolean cat) {
         if(cat && getArmingStatus() == ArmingStatus.ARMED_HOME) {
             setAlarmStatus(AlarmStatus.ALARM);
-        } else {
+        } else if (getSensors().stream().noneMatch(Sensor::getActive)){
             setAlarmStatus(AlarmStatus.NO_ALARM);
         }
         statusListeners.forEach(sl -> sl.catDetected(cat));
@@ -86,17 +86,7 @@ public class SecurityService {
         }
         switch(securityRepository.getAlarmStatus()) {
             case NO_ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
-            case PENDING_ALARM -> setAlarmStatus(AlarmStatus.NO_ALARM);
-        }
-    }
-    
-    private void handleAlreadyActivatedSensor() {
-        if(securityRepository.getArmingStatus() == ArmingStatus.DISARMED) {
-            return; //no problem if the system is disarmed
-        }
-        switch(securityRepository.getAlarmStatus()) {
-        case NO_ALARM -> setAlarmStatus(AlarmStatus.PENDING_ALARM);
-        case PENDING_ALARM -> setAlarmStatus(AlarmStatus.ALARM);
+            case PENDING_ALARM -> setAlarmStatus(AlarmStatus.ALARM);
         }
     }
 
@@ -105,7 +95,11 @@ public class SecurityService {
      */
     private void handleSensorDeactivated() {
         switch(securityRepository.getAlarmStatus()) {
-            case PENDING_ALARM -> setAlarmStatus(AlarmStatus.NO_ALARM);
+            case PENDING_ALARM -> {
+                if (getSensors().stream().noneMatch(Sensor::getActive)) {
+                    setAlarmStatus(AlarmStatus.NO_ALARM);
+                }
+            }
         }
     }
 
@@ -122,7 +116,7 @@ public class SecurityService {
         } else if (!(sensor.getActive() && active)) {
             handleSensorDeactivated();
         } else if(sensor.getActive()) {
-            handleAlreadyActivatedSensor();
+            handleSensorActivated();
         }
         sensor.setActive(active);
         securityRepository.updateSensor(sensor);

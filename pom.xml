@@ -23,17 +23,6 @@
   </properties>
 
   <dependencies>
-    <dependency>
-      <groupId>com.miglayout</groupId>
-      <artifactId>miglayout-swing</artifactId>
-      <version>5.1</version>
-    </dependency>
-    <!-- https://mvnrepository.com/artifact/com.github.spotbugs/spotbugs -->
-    <dependency>
-      <groupId>com.github.spotbugs</groupId>
-      <artifactId>spotbugs-maven-plugin</artifactId>
-      <version>4.1.4</version>
-    </dependency>
     <!-- Thanks for using https://jar-download.com -->
   </dependencies>
   <reporting>
@@ -69,6 +58,11 @@
         <plugin>
           <artifactId>maven-surefire-plugin</artifactId>
           <version>3.0.0-M5</version>
+          <configuration>
+            <argLine>
+              --add-opens com.udacity.catpoint.security.SecurityService/com.udacity.catpoint.security.service=ALL-UNNAMED
+            </argLine>
+          </configuration>
         </plugin>
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
