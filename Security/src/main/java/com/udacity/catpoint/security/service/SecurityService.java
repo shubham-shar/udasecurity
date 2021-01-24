@@ -10,6 +10,7 @@ import com.udacity.catpoint.security.data.Sensor;
 import java.awt.image.BufferedImage;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Service that receives information about changes to the security system. Responsible for
@@ -37,7 +38,13 @@ public class SecurityService {
     public void setArmingStatus(ArmingStatus armingStatus) {
         switch (armingStatus){
             case DISARMED -> setAlarmStatus(AlarmStatus.NO_ALARM);
-            case ARMED_HOME, ARMED_AWAY -> getSensors().forEach(sensor -> sensor.setActive(false));
+            case ARMED_HOME, ARMED_AWAY -> {
+                Set<Sensor> sensors = getSensors().stream().map(sensor -> {
+                    sensor.setActive(false);
+                    return sensor;
+                }).collect(Collectors.toSet());
+                sensors.forEach(sensor -> securityRepository.updateSensor(sensor));
+            }
         }
         securityRepository.setArmingStatus(armingStatus);
     }
@@ -109,6 +116,8 @@ public class SecurityService {
      * @param active
      */
     public void changeSensorActivationStatus(Sensor sensor, Boolean active) {
+        sensor.setActive(active);
+        securityRepository.updateSensor(sensor);
         if(!sensor.getActive() && active) {
             handleSensorActivated();
         } else if (sensor.getActive() && !active) {
@@ -118,8 +127,6 @@ public class SecurityService {
         } else if(sensor.getActive()) {
             handleSensorActivated();
         }
-        sensor.setActive(active);
-        securityRepository.updateSensor(sensor);
     }
 
     public AlarmStatus getAlarmStatus() {

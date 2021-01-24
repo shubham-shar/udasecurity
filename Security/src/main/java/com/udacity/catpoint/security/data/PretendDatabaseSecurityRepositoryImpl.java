@@ -38,8 +38,7 @@ public class PretendDatabaseSecurityRepositoryImpl implements SecurityRepository
         if(sensorString == null) {
             sensors = new TreeSet<>();
         } else {
-            Type type = new TypeToken<Set<Sensor>>() {
-            }.getType();
+            Type type = new TypeToken<Set<Sensor>>() {}.getType();
             sensors = gson.fromJson(sensorString, type);
         }
     }

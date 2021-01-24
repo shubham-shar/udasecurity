@@ -6,5 +6,5 @@ module com.udacity.catpoint.security.SecurityService {
     requires com.google.common;
     requires com.udacity.catpoint.imageService.imageProcessor;
     requires java.sql;
-    opens com.udacity.catpoint.security.data;
+    opens com.udacity.catpoint.security.data to gson;
 }

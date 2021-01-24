@@ -1,12 +1,10 @@
 package com.udacity.catpoint.security.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.awt.image.BufferedImage;
 import java.util.prefs.BackingStoreException;
-import java.util.prefs.Preferences;
 
 import com.udacity.catpoint.imageService.service.ImageService;
 import com.udacity.catpoint.security.data.AlarmStatus;
@@ -14,7 +12,6 @@ import com.udacity.catpoint.security.data.ArmingStatus;
 import com.udacity.catpoint.security.data.PretendDatabaseSecurityRepositoryImpl;
 import com.udacity.catpoint.security.data.Sensor;
 import com.udacity.catpoint.security.data.SensorType;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -24,7 +21,6 @@ import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
-import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
@@ -40,16 +36,11 @@ public class SecurityServiceTest {
     @InjectMocks
     private SecurityService securityService;
     
-    @Spy
+    @Mock
     private PretendDatabaseSecurityRepositoryImpl securityRepository;
     
     @Mock
     private ImageService imageService;
-    
-    @BeforeEach
-    public void setup() throws BackingStoreException {
-        clearCache();
-    }
     
     /*
     * If alarm is armed and a sensor becomes activated, put the system into pending alarm status.
@@ -59,8 +50,9 @@ public class SecurityServiceTest {
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         securityService.setAlarmStatus(AlarmStatus.NO_ALARM);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.NO_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
-        assertEquals(AlarmStatus.PENDING_ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -71,22 +63,23 @@ public class SecurityServiceTest {
         securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
-        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
     }
     
     /*
      * If pending alarm and all sensors are inactive, return to no alarm state.
      */
     @Test
-    public void securityTestThree() throws BackingStoreException {
-        clearCache();
+    public void securityTestThree() {
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(false);
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, false);
-        assertEquals(AlarmStatus.NO_ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -97,11 +90,10 @@ public class SecurityServiceTest {
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         securityService.setAlarmStatus(AlarmStatus.ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
-        sensor.setActive(false);
+        sensor.setActive(true);
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.ALARM);
         securityService.changeSensorActivationStatus(sensor, false);
-        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
-        securityService.changeSensorActivationStatus(sensor, true);
-        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -113,8 +105,9 @@ public class SecurityServiceTest {
         securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(true);
+        Mockito.when(securityRepository.getAlarmStatus())
+                                      .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
-        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -126,8 +119,9 @@ public class SecurityServiceTest {
         securityService.setAlarmStatus(AlarmStatus.NO_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(false);
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, false);
-        assertEquals(AlarmStatus.NO_ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -141,7 +135,6 @@ public class SecurityServiceTest {
         Mockito.when(imageService.imageContainsCat(ArgumentMatchers.any(), ArgumentMatchers.anyFloat()))
                .thenReturn(Boolean.TRUE);
         securityService.processImage(currentCameraImage);
-        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -150,7 +143,6 @@ public class SecurityServiceTest {
      */
     @Test
     public void securityTestEight() throws BackingStoreException {
-        clearCache();
         Mockito.when(imageService.imageContainsCat(ArgumentMatchers.any(), ArgumentMatchers.anyFloat()))
                .thenReturn(Boolean.FALSE);
         BufferedImage currentCameraImage = new BufferedImage(240, 240, BufferedImage.TYPE_INT_ARGB);
@@ -158,7 +150,6 @@ public class SecurityServiceTest {
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(false);
         securityService.processImage(currentCameraImage);
-        assertEquals(AlarmStatus.NO_ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -167,7 +158,6 @@ public class SecurityServiceTest {
     @Test
     public void securityTestNine(){
         securityService.setArmingStatus(ArmingStatus.DISARMED);
-        assertEquals(AlarmStatus.NO_ALARM, securityService.getAlarmStatus());
     }
     
     /*
@@ -189,7 +179,6 @@ public class SecurityServiceTest {
         Mockito.when(imageService.imageContainsCat(ArgumentMatchers.any(), ArgumentMatchers.anyFloat()))
                .thenReturn(Boolean.TRUE);
         securityService.processImage(currentCameraImage);
-        assertEquals(AlarmStatus.ALARM, securityService.getAlarmStatus());
     }
     
     
@@ -213,6 +202,8 @@ public class SecurityServiceTest {
             "PENDING_ALARM,WINDOW,true", "PENDING_ALARM,WINDOW,false", "PENDING_ALARM,MOTION,true",
             "PENDING_ALARM,MOTION,false" })
     public void changeSensorActivationStatusTest(AlarmStatus alarmStatus, SensorType sensorType, Boolean active){
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor("udacitySensor", sensorType);
         sensor.setActive(true);
         securityService.changeSensorActivationStatus(sensor, active);
@@ -232,14 +223,11 @@ public class SecurityServiceTest {
     
     @Test
     public void testDandleSensorDeactivated() {
+        Mockito.when(securityRepository.getAlarmStatus())
+               .thenReturn(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor("udacitySensor", SensorType.DOOR);
         sensor.setActive(true);
         securityService.changeSensorActivationStatus(sensor, false);
         assertFalse(sensor.getActive());
-    }
-    
-    private void clearCache() throws BackingStoreException {
-        Preferences prefs = Preferences.userNodeForPackage(PretendDatabaseSecurityRepositoryImpl.class);
-        prefs.clear();
     }
 }
