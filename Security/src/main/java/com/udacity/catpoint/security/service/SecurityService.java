@@ -80,7 +80,12 @@ public class SecurityService {
      * @param status
      */
     public void setAlarmStatus(AlarmStatus status) {
-        securityRepository.setAlarmStatus(status);
+        if (getSensors().stream().noneMatch(Sensor::getActive)
+                && AlarmStatus.PENDING_ALARM.equals(securityRepository.getAlarmStatus()) ) {
+            securityRepository.setAlarmStatus(AlarmStatus.NO_ALARM);
+        } else {
+            securityRepository.setAlarmStatus(status);
+        }
         statusListeners.forEach(sl -> sl.notify(status));
     }
 
@@ -116,17 +121,16 @@ public class SecurityService {
      * @param active
      */
     public void changeSensorActivationStatus(Sensor sensor, Boolean active) {
-        sensor.setActive(active);
-        securityRepository.updateSensor(sensor);
+        
         if(!sensor.getActive() && active) {
             handleSensorActivated();
         } else if (sensor.getActive() && !active) {
             handleSensorDeactivated();
-        } else if (!(sensor.getActive() && active)) {
-            handleSensorDeactivated();
-        } else if(sensor.getActive()) {
-            handleSensorActivated();
+        } else if (sensor.getActive() || active) {
+                handleSensorDeactivated();
         }
+        sensor.setActive(active);
+        securityRepository.updateSensor(sensor);
     }
 
     public AlarmStatus getAlarmStatus() {

@@ -14,7 +14,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 public class CatPointAppTest {
 
     @Test
-    public void testCatPointApp(){
+    public void runCatPointApp(){
         CatpointApp.main(null);
     }
     

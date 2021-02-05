@@ -2,8 +2,10 @@ package com.udacity.catpoint.security.service;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 
 import java.awt.image.BufferedImage;
+import java.util.Collections;
 import java.util.prefs.BackingStoreException;
 
 import com.udacity.catpoint.imageService.service.ImageService;
@@ -22,6 +24,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 
 /**
  * @author shubham sharma
@@ -29,6 +33,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
  *         20/12/20
  */
 @ExtendWith(MockitoExtension.class)
+@MockitoSettings(strictness = Strictness.LENIENT)
 public class SecurityServiceTest {
     
     public static final String TEST_SENSOR = "testSensor";
@@ -43,142 +48,159 @@ public class SecurityServiceTest {
     private ImageService imageService;
     
     /*
-    * If alarm is armed and a sensor becomes activated, put the system into pending alarm status.
+    * 1. If alarm is armed and a sensor becomes activated, put the system into pending alarm status.
     */
     @Test
-    public void securityTestOne(){
+    public void armedAlarm_activatedSensor_pendingAlarmResult(){
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
-        securityService.setAlarmStatus(AlarmStatus.NO_ALARM);
+        sensor.setActive(false);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         Mockito.when(securityRepository.getAlarmStatus())
                .thenReturn(AlarmStatus.NO_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-    * If alarm is armed and a sensor becomes activated and the system is already pending alarm, set on the alarm.
+    * 2. If alarm is armed and a sensor becomes activated and the system is already pending alarm, set on the alarm.
     */
     @Test
-    public void securityTestTwo(){
-        securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
+    public void armedAlarm_activatedSensor_pendingAlarm_AlarmResult(){
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         Mockito.when(securityRepository.getAlarmStatus())
                .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
+        Mockito.verify(securityRepository, Mockito.times(1))
+             .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If pending alarm and all sensors are inactive, return to no alarm state.
+     * 3. If pending alarm and all sensors are inactive, return to no alarm state.
      */
     @Test
-    public void securityTestThree() {
+    public void pendingAlarmWithInactiveSensors_noAlarmResult() {
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
-        securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(false);
         Mockito.when(securityRepository.getAlarmStatus())
                .thenReturn(AlarmStatus.PENDING_ALARM);
-        securityService.changeSensorActivationStatus(sensor, false);
+        securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If alarm is active, change in sensor state should not affect the alarm state.
+     * 4. If alarm is active, change in sensor state should not affect the alarm state.
      */
     @Test
-    public void securityTestFour(){
+    public void activeAlarm_noAffectOnAlarmIfSensorStateChanged(){
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
-        securityService.setAlarmStatus(AlarmStatus.ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(true);
         Mockito.when(securityRepository.getAlarmStatus())
                .thenReturn(AlarmStatus.ALARM);
         securityService.changeSensorActivationStatus(sensor, false);
+        Mockito.verify(securityRepository, Mockito.times(0))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If a sensor is activated while already active and the system is in pending state, change it to alarm state.
+     * 5. If a sensor is activated while already active and the system is in pending state, change it to alarm state.
      */
     @Test
-    public void securityTestFive(){
+    public void activateActiveSensor_whileSystemInPendingState_alarmResult(){
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
-        securityService.setAlarmStatus(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(true);
         Mockito.when(securityRepository.getAlarmStatus())
                                       .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, true);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If a sensor is deactivated while already inactive, make no changes to the alarm state.
+     * 6. If a sensor is deactivated while already inactive, make no changes to the alarm state.
      */
     @Test
-    public void securityTestSix(){
+    public void deactivateInActiveSensor_noChangeInAlarm(){
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
-        securityService.setAlarmStatus(AlarmStatus.NO_ALARM);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(false);
         Mockito.when(securityRepository.getAlarmStatus())
                .thenReturn(AlarmStatus.PENDING_ALARM);
         securityService.changeSensorActivationStatus(sensor, false);
+        Mockito.verify(securityRepository, Mockito.times(0))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If the image service identifies an image containing a cat while the system is armed-home,
+     * 7. If the image service identifies an image containing a cat while the system is armed-home,
      * put the system into alarm status.
      */
     @Test
-    public void securityTestSeven(){
+    public void catDetected_systemArmed_resultInAlarm(){
         BufferedImage currentCameraImage = new BufferedImage(240, 240, BufferedImage.TYPE_INT_ARGB);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
-        Mockito.when(imageService.imageContainsCat(ArgumentMatchers.any(), ArgumentMatchers.anyFloat()))
+        Mockito.when(imageService.imageContainsCat(any(), ArgumentMatchers.anyFloat()))
                .thenReturn(Boolean.TRUE);
+        Mockito.when(securityRepository.getArmingStatus())
+                                                .thenReturn(ArmingStatus.ARMED_HOME);
         securityService.processImage(currentCameraImage);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If the image service identifies an image that does not contain a cat,
+     * 8. If the image service identifies an image that does not contain a cat,
      * change the status to no alarm as long as the sensors are not active.
      */
     @Test
-    public void securityTestEight() throws BackingStoreException {
-        Mockito.when(imageService.imageContainsCat(ArgumentMatchers.any(), ArgumentMatchers.anyFloat()))
+    public void catNotDetected_sensorsNotActive_changeToAlarm() throws BackingStoreException {
+        Mockito.when(imageService.imageContainsCat(any(), ArgumentMatchers.anyFloat()))
                .thenReturn(Boolean.FALSE);
         BufferedImage currentCameraImage = new BufferedImage(240, 240, BufferedImage.TYPE_INT_ARGB);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         Sensor sensor = new Sensor(TEST_SENSOR, SensorType.DOOR);
         sensor.setActive(false);
         securityService.processImage(currentCameraImage);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If the system is disarmed, set the status to no alarm.
+     * 9. If the system is disarmed, set the status to no alarm.
      */
     @Test
-    public void securityTestNine(){
+    public void systemDisarmed_changeToNoAlarm(){
         securityService.setArmingStatus(ArmingStatus.DISARMED);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     /*
-     * If the system is armed, reset all sensors to inactive.
+     * 10. If the system is armed, reset all sensors to inactive.
      */
     @Test
-    public void securityTestTen(){
+    public void systemArmed_deactivateAllSensors(){
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
         assertTrue(securityService.getSensors().stream().allMatch(sensor1 -> Boolean.FALSE.equals(sensor1.getActive())));
     }
     
     /*
-     * If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
+     * 11. If the system is armed-home while the camera shows a cat, set the alarm status to alarm.
      */
     @Test
-    public void securityTestEleven(){
+    public void armedHome_catDetected_changeToAlarm(){
         BufferedImage currentCameraImage = new BufferedImage(240, 240, BufferedImage.TYPE_INT_ARGB);
         securityService.setArmingStatus(ArmingStatus.ARMED_HOME);
-        Mockito.when(imageService.imageContainsCat(ArgumentMatchers.any(), ArgumentMatchers.anyFloat()))
+        Mockito.when(imageService.imageContainsCat(any(), ArgumentMatchers.anyFloat()))
                .thenReturn(Boolean.TRUE);
         securityService.processImage(currentCameraImage);
+        Mockito.verify(securityRepository, Mockito.times(1))
+               .setAlarmStatus(any(AlarmStatus.class));
     }
     
     
@@ -186,13 +208,13 @@ public class SecurityServiceTest {
     
     @ParameterizedTest
     @EnumSource(ArmingStatus.class)
-    public void setArmingStatusTest(ArmingStatus status){
+    public void setArmingStatusMethod(ArmingStatus status){
         securityService.setArmingStatus(status);
     }
     
     @ParameterizedTest
     @EnumSource(AlarmStatus.class)
-    public void setAlarmStatusTest(AlarmStatus alarmStatus){
+    public void setAlarmStatusMethod(AlarmStatus alarmStatus){
         securityService.setAlarmStatus(alarmStatus);
     }
     
@@ -201,7 +223,8 @@ public class SecurityServiceTest {
             "NO_ALARM,MOTION,true", "NO_ALARM,MOTION,false","PENDING_ALARM,DOOR,true", "PENDING_ALARM,DOOR,false",
             "PENDING_ALARM,WINDOW,true", "PENDING_ALARM,WINDOW,false", "PENDING_ALARM,MOTION,true",
             "PENDING_ALARM,MOTION,false" })
-    public void changeSensorActivationStatusTest(AlarmStatus alarmStatus, SensorType sensorType, Boolean active){
+    public void changeSensorActivationStatusWithAllAlarms(AlarmStatus alarmStatus, SensorType sensorType,
+            Boolean active){
         Mockito.when(securityRepository.getAlarmStatus())
                .thenReturn(AlarmStatus.PENDING_ALARM);
         Sensor sensor = new Sensor("udacitySensor", sensorType);
@@ -229,5 +252,16 @@ public class SecurityServiceTest {
         sensor.setActive(true);
         securityService.changeSensorActivationStatus(sensor, false);
         assertFalse(sensor.getActive());
+    }
+    
+    @Test
+    public void updateSensorWhenArmed() {
+        ArmingStatus armingStatus = ArmingStatus.ARMED_HOME;
+        Sensor sensor = new Sensor("udacitySensor", SensorType.DOOR);
+        sensor.setActive(true);
+        Mockito.when(securityRepository.getSensors())
+               .thenReturn(Collections.singleton(sensor));
+        securityService.setArmingStatus(armingStatus);
+       Mockito.verify(securityRepository, Mockito.times(1)).updateSensor(any());
     }
 }
